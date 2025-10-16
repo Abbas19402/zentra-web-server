@@ -15,7 +15,7 @@ export class VideosService {
     @InjectModel(Video.name) private videoModel: Model<VideoDocument>,
     private readonly userService: UserService
   ) {}
-
+  
   public async getAllVideos() {
     const hlsDir = path.join(process.cwd(), 'hls');
 
@@ -75,18 +75,19 @@ export class VideosService {
 
     try {
       const uploadedMetadata = new this.videoModel(metadata)
+      console.log(uploadedMetadata) 
       const videoId = (uploadedMetadata._id as ObjectId).toString()
       const outputDir = path.join('hls', videoId);
       const extension = ".png"
-      const thumbnailOutputDir = path.join('thumbnails',`${videoId}-${uploadedMetadata.title.replace(" ","_").toLowerCase()}`)
+      const thumbnailOutputDir = path.join('thumbnails',`${videoId}-${uploadedMetadata.title.replaceAll(" ","_").toLowerCase()}`)
 
       fs.mkdirSync(outputDir, { recursive: true });
   
       const cmd = this.createCommand(inputPath,outputDir);
       const createTnCmd = this.generateThumbnailCommand(inputPath,thumbnailOutputDir+extension)
       Logger.debug(createTnCmd)
-      const url = `http://192.168.0.198:8080/hls/${uploadedMetadata._id}/playlist.m3u8`
-      const thumbnailUrl = `http://192.168.0.198:8080/thumbnails/${videoId}-${uploadedMetadata.title.replace(" ","_").toLowerCase()}.png`
+      const url = `http://192.168.0.55:8080/hls/${uploadedMetadata._id}/playlist.m3u8`
+      const thumbnailUrl = `http://192.168.0.55:8080/thumbnails/${videoId}-${uploadedMetadata.title.replaceAll(" ","_").toLowerCase()}.png`
       uploadedMetadata.set('url',url)
       uploadedMetadata.set('thumbnailUrl',thumbnailUrl)
       
