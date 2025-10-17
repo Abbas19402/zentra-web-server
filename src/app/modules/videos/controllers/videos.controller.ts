@@ -3,8 +3,9 @@ import { VideosService } from '../services/videos.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Video } from '../entities/video.entity';
 
+
 @Controller('videos')
-export class VideosController {
+export class VideosController { 
   constructor(private readonly videosService: VideosService) {}
  
   @Post('upload')

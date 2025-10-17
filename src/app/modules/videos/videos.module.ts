@@ -7,6 +7,7 @@ import { Comment, CommentEntity } from './entities/comment.entity';
 import { Like, LikeEntity } from './entities/like.entity';
 import { FileSystemModule } from '../file-system/file-system.module';
 import { UserService } from '../user/services/user.service';
+import { EncoderService } from './services/encoder.service';
 
 @Module({
   imports:[
@@ -18,6 +19,6 @@ import { UserService } from '../user/services/user.service';
     FileSystemModule
   ],
   controllers: [VideosController],
-  providers: [VideosService, UserService],
+  providers: [VideosService, UserService, EncoderService],
 })
 export class VideosModule {}

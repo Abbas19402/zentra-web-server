@@ -7,13 +7,15 @@ import { exec } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import { UserService } from '../../user/services/user.service';
+import { EncoderService } from './encoder.service';
 
 @Injectable()
 export class VideosService {
   constructor(
     @InjectConnection() private connection: Connection,
     @InjectModel(Video.name) private videoModel: Model<VideoDocument>,
-    private readonly userService: UserService
+    private readonly userService: UserService,
+    private readonly encoderService: EncoderService
   ) {}
   
   public async getAllVideos() {
@@ -81,28 +83,33 @@ export class VideosService {
       const extension = ".png"
       const thumbnailOutputDir = path.join('thumbnails',`${videoId}-${uploadedMetadata.title.replaceAll(" ","_").toLowerCase()}`)
 
-      fs.mkdirSync(outputDir, { recursive: true });
+      fs.mkdirSync(outputDir, { recursive: true });  
   
-      const cmd = this.createCommand(inputPath,outputDir);
       const createTnCmd = this.generateThumbnailCommand(inputPath,thumbnailOutputDir+extension)
-      Logger.debug(createTnCmd)
       const url = `http://192.168.0.55:8080/hls/${uploadedMetadata._id}/playlist.m3u8`
       const thumbnailUrl = `http://192.168.0.55:8080/thumbnails/${videoId}-${uploadedMetadata.title.replaceAll(" ","_").toLowerCase()}.png`
       uploadedMetadata.set('url',url)
       uploadedMetadata.set('thumbnailUrl',thumbnailUrl)
       
-      await new Promise((resolve, reject) => {
-        exec(cmd, { maxBuffer: 1024 * 1024 * 50 }, (err) => {
-          if (err) return reject(err);
-          resolve(true);
-        });
-      });
+      const result = await this.encoderService.encodeVideo(
+        inputPath,
+        path.resolve(outputDir)
+      );
+      
+      console.log("encoded")
       await new Promise((resolve, reject) => {
         exec(createTnCmd, { maxBuffer: 1024 * 1024 * 50 }, (err) => {
-          if (err) return reject(err);
+          if (err) {
+                // Log the command, error, and any output (stdout/stderr)
+                console.error("Thumbnail command failed:", createTnCmd);
+                console.error("Error:", err);
+              
+                return reject(err);
+            }
           resolve(true);
         });
       });
+       console.log("thumbnailed")
       return uploadedMetadata.save();
     } catch (e) {
       throw new HttpException('Encoding failed', 500);
